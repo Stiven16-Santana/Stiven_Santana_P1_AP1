@@ -1,10 +1,17 @@
+using Microsoft.EntityFrameworkCore;
 using Stiven_Santana_P1_AP1.Components;
+using Stiven_Santana_P1_AP1.DAL;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+//Obtenemos el ConStr para usarlo en el contexto
+var ConStr = builder.Configuration.GetConnectionString("SqlConStr");
+
+builder.Services.AddDbContextFactory<Contexto>(o => o.UseSqlServer(ConStr));
 
 var app = builder.Build();
 
