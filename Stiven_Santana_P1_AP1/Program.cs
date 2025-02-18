@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Stiven_Santana_P1_AP1.Components;
 using Stiven_Santana_P1_AP1.DAL;
+using Stiven_Santana_P1_AP1.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,8 @@ var ConStr = builder.Configuration.GetConnectionString("SqlConStr");
 
 builder.Services.AddDbContextFactory<Contexto>(o => o.UseSqlServer(ConStr));
 
+//Inyeccion del service
+builder.Services.AddScoped<AportesService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
