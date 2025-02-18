@@ -1,5 +1,124 @@
-﻿<h3>Index</h3>
+﻿@page "/Aporte/Index"
+@inject AportesService aportesService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Consulta de Aportes</PageTitle>
+<div class="card">
+    <div class="shadow-lg">
+        <div class="card-header text-center">
+            <h2><strong>Consulta de Aportes</strong></h2>
+        </div>
+
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-3">
+                    <label class="form-label"><strong>Desde</strong></label>
+                    <input type="date" class="form-control" @bind="fechaDesde" />
+                </div>
+                <div class="col-3">
+                    <label class="form-label"><strong>Hasta</strong></label>
+                    <input type="date" class="form-control" @bind="fechaHasta" />
+                </div>
+            </div>
+
+            <div class="row align-items-end">
+                <div class="col-3">
+                    <label class="form-label"><strong>Filtrar por</strong></label>
+                    <InputSelect class="form-select" @bind-Value="filtro">
+                        <option value="" disabled>Elija una opción</option>
+                        <option value="Persona">Persona</option>
+                        <option value="AporteId">Aporte ID</option>
+                    </InputSelect>
+                </div>
+                <div class="col-4">
+                    <label class="form-label"><strong>Búsqueda</strong></label>
+                    <div class="input-group">
+                        <input class="form-control" @bind="valorFiltro" placeholder="Buscar" />
+                        <button type="button" class="btn btn-outline-primary" @onclick="Buscar">🔍</button>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="Restablecer">🔄 Restablecer</button>
+                </div>
+                <div class="col text-end">
+                    <a class="btn btn-outline-primary ms-2" href="/Aporte/Create">Crear</a>
+                </div>
+            </div>
+
+            <div class="text-center mt-3">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>AporteId</th>
+                            <th>Persona</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in AportesFiltrados)
+                        {
+                            <tr>
+                                <td>@item.AporteId</td>
+                                <td>@item.Persona</td>
+                                <td>
+                                    @item.Monto.ToString("N2")
+                                    <button class="btn btn-outline-primary btn-sm ms-2" @onclick="() => Ver(item.AporteId)">Ver</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-6">
+                    <strong>Conteo:</strong> @AportesFiltrados.Count
+                </div>
+                <div class="col-6 text-end">
+                    <strong>Total Monto:</strong> @AportesFiltrados.Sum(a => a.Monto).ToString("N2")
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
+    private string filtro = "Persona";
+    private string valorFiltro = "";
+    private DateTime? fechaDesde;
+    private DateTime? fechaHasta;
+    private List<Aportes> AportesFiltrados = new();
 
+    private async Task Buscar()
+    {
+        var lista = await aportesService.ObtenerTodosAsync();
+
+        if (fechaDesde.HasValue && fechaHasta.HasValue)
+            lista = lista.Where(a => a.Fecha >= fechaDesde && a.Fecha <= fechaHasta).ToList();
+
+        if (!string.IsNullOrWhiteSpace(valorFiltro))
+        {
+            if (filtro == "Persona")
+                lista = lista.Where(a => a.Persona.Contains(valorFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
+            else if (filtro == "AporteId" && int.TryParse(valorFiltro, out int aporteId))
+                lista = lista.Where(a => a.AporteId == aporteId).ToList();
+        }
+
+        AportesFiltrados = lista;
+    }
+
+    private async Task Restablecer()
+    {
+        fechaDesde = null;
+        fechaHasta = null;
+        valorFiltro = "";
+        filtro = "Persona";
+        AportesFiltrados = await aportesService.ObtenerTodosAsync();
+    }
+
+    private void Ver(int aporteId)
+    {
+        Navigation.NavigateTo($"/Aporte/Details/{aporteId}");
+    }
 }
